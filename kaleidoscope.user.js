@@ -3,7 +3,7 @@
 // @namespace   http://www.guardian.co.uk
 // @description Greasemonkey plugin to preview guardian.co.uk content across different platforms and sizes
 // @include     about:addons
-// @include     http://www.guardian.co.uk/
+// @include     http://www.guardian.co.uk/*
 // @resource    test.css
 // @version     0.1
 // @grant       GM_addStyle
@@ -53,13 +53,13 @@ css_prefix + "container { " +
     "right: 20px;" +
     "z-index: 10000;" +
     "width: 369px;" +
-    "height: 566px;" +    
-"}" + 
+    "height: 566px;" +
+"}" +
 css_prefix + "frame {" +
     "width: 316px;" +
     "height: 478px;" +
     "position: absolute;" +
-    "top: 34px;" + 
+    "top: 34px;" +
     "right: 26px;" +
     "border-radius: 10px;" +
 "}" +
@@ -88,12 +88,26 @@ css_prefix + "aggregator {" +
  */
 var Kaleidoscope = {
 
+    config : {},
+
     /**
      * Where the shit goes down
      */
     init : function() {
-        this.initCta();
-        this.initConfig();
+        this.config.path = window.location.pathname;
+
+        var regex = /gallery|video/g;
+        var isSupportedPath = this.config.path.match(regex);
+
+        //Ensure we are not on video or gallery page
+        if(isSupportedPath === null) {
+            this.config.type = (this.config.path === '/') ? 'front' : 'article';
+            this.initConfig();
+            this.initCta();
+        //Else exit out of script
+        } else {
+            return false;
+        }
     },
 
     /**
@@ -126,36 +140,32 @@ var Kaleidoscope = {
      * Constructs global config object
      */
     initConfig : function() {
-        this.config = {};
 
-        this.config.isOpen = false;
-
-        var path = window.location.pathname;
-        console.log(path);
+        this.config.issOpen = false;
 
         this.config.images = [
-            { 
-                'class': html_prefix + 'phone', 
+            {
+                'class': html_prefix + 'phone',
                 'src': 'http://i.imgur.com/zfUaF.png'
             },
-            { 
-                'class': html_prefix + 'aggregator', 
+            {
+                'class': html_prefix + 'aggregator',
                 'src': 'http://i.imgur.com/Uyl09.png',
                 'title': 'Mobile Apps'
             },
-            { 
-                'class': html_prefix + 'mdot', 
+            {
+                'class': html_prefix + 'mdot',
                 'src': 'http://i.imgur.com/Cxsgc.png',
                 'title': 'Current mobile site'
             },
-            { 
-                'class': html_prefix + 'responsive', 
+            {
+                'class': html_prefix + 'responsive',
                 'src': 'http://i.imgur.com/QJFty.png',
                 'title': 'New responsive site'
             }
         ];
 
-        this.config.frame_src = "http://beta.guardian.co.uk?gu.prefs.font-family=1";
+        this.config.frame_src = "http://beta.guardian.co.uk"+this.config.path+"?gu.prefs.font-family=1";
     },
 
     /**
@@ -172,7 +182,7 @@ var Kaleidoscope = {
             var img = this.config.images[i];
             var item_to_append_to = container;
 
-            if (img['title']) {
+            if (img.title) {
                 var link = document.createElement('a');
                 link.setAttribute('title', img['title']);
                 link.setAttribute('href', 'javascript://');
@@ -190,7 +200,7 @@ var Kaleidoscope = {
         frame.setAttribute('frameborder', '0');
         frame.setAttribute('src', this.config.frame_src);
         frame.className = html_prefix + 'frame';
-        container.appendChild(frame)
+        container.appendChild(frame);
 
     }
 
