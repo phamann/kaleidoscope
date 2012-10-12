@@ -227,6 +227,8 @@ var Kaleidoscope = {
         container.className = html_prefix + "container";
         document.body.appendChild(container);
 
+        this.initDragging(container);
+
         for (var i in this.config.images) {
             var img = this.config.images[i];
             var item_to_append_to = container;
@@ -409,6 +411,14 @@ var Kaleidoscope = {
             }
         });
 
+    },
+
+    initDragging : function(container) {
+        container.setAttribute("draggable", true);
+
+        container.addEventListener("dragend", function(e) {
+            console.dir(e);
+        });
     }
 
 };
