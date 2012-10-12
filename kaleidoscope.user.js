@@ -147,6 +147,7 @@ var Kaleidoscope = {
         cta.onclick = function() {
 
             if (!that.config.isOpen) { // first click
+                that.config.isOpen = true;
                 svg.src = loadingGif;
                 that.loadFrame();
             } else { // toggling
@@ -299,6 +300,9 @@ var Kaleidoscope = {
 
         if(element === 'iframe') {
             el.setAttribute('frameborder', '0');
+        }
+
+        if (type === "responsive") {
             el.onload = this.frameLoaded;
         }
 
@@ -396,7 +400,6 @@ var Kaleidoscope = {
     },
 
     frameLoaded : function() {
-        console.log('loaded');
         localStorage.setItem(html_prefix + 'pref', "on");
         var container = document.querySelector(css_prefix + 'container');
         var cta = document.querySelector(css_prefix + 'cta img');
