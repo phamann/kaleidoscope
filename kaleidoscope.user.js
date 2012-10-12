@@ -4,9 +4,10 @@
 // @description Greasemonkey plugin to preview guardian.co.uk content across different platforms and sizes
 // @include     about:addons
 // @include     http://www.guardian.co.uk/*
-// @resource    test.css
+// @include     http://www.guprod.gnl/*
 // @version     0.1
 // @grant       GM_addStyle
+// @grant       GM_xmlhttpRequest
 // ==/UserScript==
 
 // <a href="http://thenounproject.com/noun/delete/#icon-No2910" target="_blank">Delete</a> designed by <a href="http://thenounproject.com/somerandomdude" target="_blank">P.J. Onori</a> from The Noun Project
@@ -114,8 +115,6 @@ var Kaleidoscope = {
 
             this.initCta(simulateClick);
 
-
-
         //Else exit out of script
         } else {
             return false;
@@ -131,7 +130,9 @@ var Kaleidoscope = {
             svg = new Image();
 
         cta.onclick = function() {
-            // todo: set cookie
+            
+            that.parseDraftContent();
+
             if (!that.config.isOpen) { // first click
                 svg.src = loadingGif;
                 that.loadFrame();
@@ -241,6 +242,61 @@ var Kaleidoscope = {
         var cta = document.querySelector(css_prefix + 'cta img');
         cta.src = closeButtonSvg;
         container.style.display = 'block';
+    },
+
+    parseDraftContent : function () {
+        // might make more sense to use a URL in a "global" section to prevent all previews having developer blog section styles
+        var betaUrl = 'http://beta.gucode.co.uk/info/developer-blog/2012/oct/05/functional-programming-scala-week-three';
+     
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: betaUrl,
+            onload: function(response) {
+                var template = response.responseText;
+              
+                // first get the current article elements
+                var image = document.querySelector('#main-content-picture');
+                var headline = document.querySelector('#main-article-info h1');
+                var standfirst = document.querySelector('#stand-first');
+                var articleBody = document.querySelector('#article-body-blocks');
+                var byline = document.querySelector('span.blog-byline-kick');
+
+                // now make a fake article
+                var placeholder = document.createElement('div');
+                placeholder.innerHTML = template;
+
+                // find the right bits
+                var imagePlaceholder = placeholder.querySelector('figure'); // not sure if this is the only one, inline images?
+                var headlinePlaceholder = placeholder.querySelector('header h1');
+                var standfirstPlaceholder = placeholder.querySelector('header .standfirst');
+                var bodyPlaceholder = placeholder.querySelector('article .article-body');
+                var bylinePlaceholder = placeholder.querySelector('p.byline');
+
+                // and swap them for the current ones
+                imagePlaceholder.innerHTML = image.innerHTML;
+                headlinePlaceholder.innerHTML = headline.innerHTML;
+                standfirstPlaceholder.innerHTML = standfirst.innerHTML;
+                bodyPlaceholder.innerHTML = articleBody.innerHTML;
+                bylinePlaceholder.innerHTML = byline.innerText;
+
+                // now take out the stuff we don't support
+                var unsupported = placeholder.querySelectorAll('span.embed-media');
+                for (var i=0, l=unsupported.length; i<l; i++) {
+                    var u = unsupported[i];
+                    u.parentNode.removeChild(u);
+                }
+
+                // now add that mother to the DOM
+                var iframe = document.createElement('iframe');
+                iframe.setAttribute('frameborder', '0');
+                iframe.className = html_prefix + 'frame';
+                iframe.style.zIndex = 10000;
+                iframe.src = "data:text/html;charset=utf-8," + escape(placeholder.innerHTML);
+                document.body.appendChild(iframe);
+            }
+        });
+
+
     }
 
 };
