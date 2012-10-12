@@ -52,7 +52,7 @@ css_prefix + "phone { " +
 "}" +
 css_prefix + "container { " +
     "position: fixed;" +
-    "top: 50px;" +
+    "top: 80px;" +
     "right: 20px;" +
     "z-index: 10000;" +
     "width: 369px;" +
@@ -88,9 +88,19 @@ css_prefix + "btn-mdot {" +
 "}" +
 css_prefix + "btn-aggregator {" +
     "right: 34px;" +
+"}" +
+css_prefix + "aggregator-inner {" +
+    "padding: 10px;" +
+    "overflow: auto;" +
+    "height: 450px;" +
+"}" +
+css_prefix + "aggregator-inner h4 { " +
+    "font-family: arial;" +
+    "margin-bottom: 10px;" +
+"}" +
+css_prefix + "aggregator-inner li { " +
+    "margin: 5px 0 !important;" +
 "}";
-
-
 
 /**
  * Global object - nothing should be outside this
@@ -137,6 +147,7 @@ var Kaleidoscope = {
         cta.onclick = function() {
 
             if (!that.config.isOpen) { // first click
+                that.config.isOpen = true;
                 svg.src = loadingGif;
                 that.loadFrame();
             } else { // toggling
@@ -215,6 +226,10 @@ var Kaleidoscope = {
         ];
 
         this.config.frame_src = "http://beta.guardian.co.uk"+this.config.path+"?gu.prefs.font-family=1";
+
+        this.config.aggregator_base_url = 'http://aggregator.guardian.co.uk/v2/';
+        this.config.aggregator_networkfront_url = this.config.aggregator_base_url + 'homepage.json';
+        this.config.aggregator_section_base_url = this.config.aggregator_base_url + 'section/';
     },
 
     /**
@@ -264,8 +279,8 @@ var Kaleidoscope = {
                 el = 'iframe',
                 state = 'off';
 
-            if(this.config.types[t] === 'responsive') state = 'on';
-            if(this.config.types[t] === 'aggregator') el = 'div';
+            if(this.config.types[t] === 'responsive') { state = 'on'; }
+            if(this.config.types[t] === 'aggregator') { el = 'div'; }
 
             this.createContainer(type, el, container, state);
         }
@@ -287,6 +302,9 @@ var Kaleidoscope = {
 
         if(element === 'iframe') {
             el.setAttribute('frameborder', '0');
+        }
+
+        if (type === "responsive") {
             el.onload = this.frameLoaded;
         }
 
@@ -313,7 +331,7 @@ var Kaleidoscope = {
                 el = document.getElementsByClassName(html_prefix + 'mdot')[0];
                 this.loadMdot(el);
                 break;
-            case 'aggregator'  :
+            case 'aggregator' :
                 el = document.getElementsByClassName(html_prefix + 'aggregator')[0];
                 this.loadAggregator();
                 break;
@@ -344,7 +362,36 @@ var Kaleidoscope = {
     },
 
     loadAggregator : function() {
-        console.log('foo');
+
+        var url = '';
+        if (this.config.pageType === "front") {
+            url = this.config.aggregator_networkfront_url;
+        } else if (this.config.pageType === "section") {
+            url = this.config.aggregator_section_base_url + this.config.pageSection;
+        }
+
+        var output = '<div class="' + html_prefix + 'aggregator-inner">';
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: url, // todo: make this a variable
+            onload: function (response) {
+                var data = JSON.parse(response.responseText);
+                if (data.bundles) {
+                    for (var i in data.bundles) {
+                        var bundle = data.bundles[i];
+                        output += '<h4><strong>' + bundle.name + '</strong></h4>';
+                        output += '<ol class="sublinks">';
+                        for (var j in bundle.items) {
+                            var item = bundle.items[j];
+                            output += '<li class="bullet">' + item.webTitle + '</li>';
+                        }
+                        output += '</ol><br /><br />'; // sorry
+                    }
+                    output += '</div>';
+                    document.getElementsByClassName(html_prefix + 'aggregator')[0].innerHTML = output;
+                }
+            }
+        });
     },
 
     destroyFrame : function() {
@@ -355,7 +402,6 @@ var Kaleidoscope = {
     },
 
     frameLoaded : function() {
-        console.log('loaded');
         localStorage.setItem(html_prefix + 'pref', "on");
         var container = document.querySelector(css_prefix + 'container');
         var cta = document.querySelector(css_prefix + 'cta img');
@@ -378,7 +424,7 @@ var Kaleidoscope = {
                 var headline = document.querySelector('#main-article-info h1');
                 var standfirst = document.querySelector('#stand-first');
                 var articleBody = document.querySelector('#article-body-blocks');
-                var byline = document.querySelector('span.blog-byline-kick');
+                var byline = document.querySelector('span.blog-byline-kick div a'); // this won't always work, needs fixing
 
                 // now make a fake article
                 var placeholder = document.createElement('div');
@@ -396,7 +442,7 @@ var Kaleidoscope = {
                 headlinePlaceholder.innerHTML = headline.innerHTML;
                 standfirstPlaceholder.innerHTML = standfirst.innerHTML;
                 bodyPlaceholder.innerHTML = articleBody.innerHTML;
-                bylinePlaceholder.innerHTML = byline.innerText;
+                bylinePlaceholder.innerHTML = byline.innerHTML;
 
                 // now take out the stuff we don't support
                 var unsupported = placeholder.querySelectorAll('span.embed-media');
