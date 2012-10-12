@@ -111,7 +111,6 @@ var Kaleidoscope = {
 
         //Ensure we are not on video or gallery page
         if(isSupportedPath === null) {
-            this.config.pageType = (this.config.path === '/') ? 'front' : 'article';
             this.initConfig();
 
             var simulateClick = false;
@@ -136,8 +135,6 @@ var Kaleidoscope = {
             svg = new Image();
 
         cta.onclick = function() {
-            
-            that.parseDraftContent();
 
             if (!that.config.isOpen) { // first click
                 svg.src = loadingGif;
@@ -168,6 +165,19 @@ var Kaleidoscope = {
      * Constructs global config object
      */
     initConfig : function() {
+
+        var section = this.config.path.split('/'),
+        length = section.length;
+            
+        if(section[1] === "") {
+            this.config.pageType = 'front';
+        } else if (section[1] !== "" && length === 2) {
+            this.config.pageType = 'section';
+        } else if (length >= 3) {
+            this.config.pageType = 'article';
+        }
+
+        this.config.pageSection = (length > 1) ? section[1] : null;
 
         this.config.issOpen = false;
 
@@ -260,7 +270,7 @@ var Kaleidoscope = {
 
         var responsiveFrame  = document.getElementsByClassName(html_prefix + 'responsive')[0];
 
-        if(this.config.isDraftContent) {
+        if(this.config.isDraftContent > 0) {
             this.parseDraftContent();
         } else {
             responsiveFrame.src = this.config.frame_src;
@@ -275,6 +285,7 @@ var Kaleidoscope = {
 
         if(element === 'iframe') {
             el.setAttribute('frameborder', '0');
+            el.onload = this.frameLoaded;
         }
 
         container.appendChild(el);
@@ -312,8 +323,21 @@ var Kaleidoscope = {
 
 
     loadMdot : function(el) {
-        var url = 'http://m.guardian.co.uk/ms/p/gnm/op/sNu9hnk7ho6QPSkOd_cicLg/view.m?id=15&gid=';
-        url += this.config.path;
+        var url;
+
+        if(this.config.pageType === 'front') {
+            url = 'http://m.guardian.co.uk/';
+        } else {
+
+            url = 'http://m.guardian.co.uk/ms/p/gnm/op/sNu9hnk7ho6QPSkOd_cicLg/view.m?';
+
+            var id = (this.config.pageType === 'section') ? '16' : '15';
+
+            url += 'id=' + id;
+            url += '&gid=' +this.config.path;
+            url += '&cat=' + this.config.pageSection;
+        }
+
         el.src = url;
     },
 
@@ -321,14 +345,15 @@ var Kaleidoscope = {
         console.log('foo');
     },
 
-    destroyFrame : function () {
+    destroyFrame : function() {
         localStorage.removeItem(html_prefix + 'pref');
         var frame = document.querySelector(css_prefix + 'container');
         frame.parentNode.removeChild(frame);
         this.config.isOpen = false;
     },
 
-    frameLoaded : function () {
+    frameLoaded : function() {
+        console.log('loaded');
         localStorage.setItem(html_prefix + 'pref', "on");
         var container = document.querySelector(css_prefix + 'container');
         var cta = document.querySelector(css_prefix + 'cta img');
@@ -336,7 +361,7 @@ var Kaleidoscope = {
         container.style.display = 'block';
     },
 
-    parseDraftContent : function () {
+    parseDraftContent : function() {
         // might make more sense to use a URL in a "global" section to prevent all previews having developer blog section styles
         var betaUrl = 'http://beta.gucode.co.uk/info/developer-blog/2012/oct/05/functional-programming-scala-week-three';
      
