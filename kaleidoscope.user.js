@@ -88,9 +88,19 @@ css_prefix + "btn-mdot {" +
 "}" +
 css_prefix + "btn-aggregator {" +
     "right: 34px;" +
+"}" +
+css_prefix + "aggregator-inner {" +
+    "padding: 10px;" +
+    "overflow: auto;" +
+    "height: 450px;" +
+"}" +
+css_prefix + "aggregator-inner h4 { " +
+    "font-family: arial;" +
+    "margin-bottom: 10px;" +
+"}" +
+css_prefix + "aggregator-inner li { " +
+    "margin: 5px 0 !important;" +
 "}";
-
-
 
 /**
  * Global object - nothing should be outside this
@@ -354,7 +364,7 @@ var Kaleidoscope = {
             url = this.config.aggregator_section_base_url + this.config.pageSection;
         }
 
-        var output = '';
+        var output = '<div class="' + html_prefix + 'aggregator-inner">';
         GM_xmlhttpRequest({
             method: "GET",
             url: url, // todo: make this a variable
@@ -371,6 +381,7 @@ var Kaleidoscope = {
                         }
                         output += '</ol><br /><br />'; // sorry
                     }
+                    output += '</div>';
                     document.getElementsByClassName(html_prefix + 'aggregator')[0].innerHTML = output;
                 }
             }
