@@ -205,6 +205,10 @@ var Kaleidoscope = {
         ];
 
         this.config.frame_src = "http://beta.guardian.co.uk"+this.config.path+"?gu.prefs.font-family=1";
+
+        this.config.aggregator_base_url = 'http://aggregator.guardian.co.uk/v2/';
+        this.config.aggregator_networkfront_url = this.config.aggregator_base_url + 'homepage.json';
+        this.config.aggregator_section_base_url = this.config.aggregator_base_url + 'section/';
     },
 
     /**
@@ -252,8 +256,8 @@ var Kaleidoscope = {
                 el = 'iframe',
                 state = 'off';
 
-            if(this.config.types[t] === 'responsive') state = 'on';
-            if(this.config.types[t] === 'aggregator') el = 'div';
+            if(this.config.types[t] === 'responsive') { state = 'on'; }
+            if(this.config.types[t] === 'aggregator') { el = 'div'; }
 
             this.createContainer(type, el, container, state);
         }
@@ -300,7 +304,7 @@ var Kaleidoscope = {
                 el = document.getElementsByClassName(html_prefix + 'mdot')[0];
                 this.loadMdot(el);
                 break;
-            case 'aggregator'  :
+            case 'aggregator' :
                 el = document.getElementsByClassName(html_prefix + 'aggregator')[0];
                 this.loadAggregator();
                 break;
@@ -318,7 +322,35 @@ var Kaleidoscope = {
     },
 
     loadAggregator : function() {
-        console.log('foo');
+
+        var url = '';
+        if (this.config.pageType === "front") {
+            url = this.config.aggregator_networkfront_url;
+        } else if (this.config.pageType === "section") {
+            url = this.config.aggregator_section_base_url + this.config.pageSection;
+        }
+
+        var output = '';
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: url, // todo: make this a variable
+            onload: function (response) {
+                var data = JSON.parse(response.responseText);
+                if (data.bundles) {
+                    for (var i in data.bundles) {
+                        var bundle = data.bundles[i];
+                        output += '<h4><strong>' + bundle.name + '</strong></h4>';
+                        output += '<ol class="sublinks">';
+                        for (var j in bundle.items) {
+                            var item = bundle.items[j];
+                            output += '<li class="bullet">' + item.webTitle + '</li>';
+                        }
+                        output += '</ol><br /><br />'; // sorry
+                    }
+                    document.getElementsByClassName(html_prefix + 'aggregator')[0].innerHTML = output;
+                }
+            }
+        });
     },
 
     destroyFrame : function () {
