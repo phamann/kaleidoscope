@@ -422,7 +422,7 @@ var Kaleidoscope = {
                 var headline = document.querySelector('#main-article-info h1');
                 var standfirst = document.querySelector('#stand-first');
                 var articleBody = document.querySelector('#article-body-blocks');
-                var byline = document.querySelector('span.blog-byline-kick');
+                var byline = document.querySelector('span.blog-byline-kick div a'); // this won't always work, needs fixing
 
                 // now make a fake article
                 var placeholder = document.createElement('div');
@@ -440,7 +440,7 @@ var Kaleidoscope = {
                 headlinePlaceholder.innerHTML = headline.innerHTML;
                 standfirstPlaceholder.innerHTML = standfirst.innerHTML;
                 bodyPlaceholder.innerHTML = articleBody.innerHTML;
-                bylinePlaceholder.innerHTML = byline.innerText;
+                bylinePlaceholder.innerHTML = byline.innerHTML;
 
                 // now take out the stuff we don't support
                 var unsupported = placeholder.querySelectorAll('span.embed-media');
