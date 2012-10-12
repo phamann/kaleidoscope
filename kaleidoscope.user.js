@@ -106,8 +106,16 @@ var Kaleidoscope = {
         if(isSupportedPath === null) {
             this.config.type = (this.config.path === '/') ? 'front' : 'article';
             this.initConfig();
-            this.initCta();
-            // todo: check for cookie and call loadFrame();
+       
+            var simulateClick = false;
+            if (localStorage.getItem(html_prefix + 'pref') === "on") {
+                simulateClick = true;
+            }
+
+            this.initCta(simulateClick);
+
+
+
         //Else exit out of script
         } else {
             return false;
@@ -117,7 +125,7 @@ var Kaleidoscope = {
     /**
      * Constructs cta button and appends to dom
      */
-    initCta : function() {
+    initCta : function(simulateClick) {
         var that = this,
             cta = document.createElement('a'),
             svg = new Image();
@@ -136,7 +144,7 @@ var Kaleidoscope = {
 
         svg.onload = function() {
             cta.appendChild(svg);
-            document.body.appendChild(cta);
+            document.body.appendChild(cta);            
         };
 
         cta.className = html_prefix+'cta';
@@ -144,6 +152,10 @@ var Kaleidoscope = {
         svg.width = 30;
         svg.height = 30;
         svg.src = mobileSvg;
+
+        if (simulateClick) {
+            cta.click();
+        }
     },
 
     /**
@@ -217,12 +229,14 @@ var Kaleidoscope = {
     },
 
     destroyFrame : function () {
+        localStorage.removeItem(html_prefix + 'pref');
         var frame = document.querySelector(css_prefix + 'container');
         frame.parentNode.removeChild(frame);
         this.config.isOpen = false;
     },
 
     frameLoaded : function () {
+        localStorage.setItem(html_prefix + 'pref', "on");
         var container = document.querySelector(css_prefix + 'container');
         var cta = document.querySelector(css_prefix + 'cta img');
         cta.src = closeButtonSvg;
