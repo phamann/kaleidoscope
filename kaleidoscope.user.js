@@ -52,7 +52,7 @@ css_prefix + "phone { " +
 "}" +
 css_prefix + "container { " +
     "position: fixed;" +
-    "top: 50px;" +
+    "top: 80px;" +
     "right: 20px;" +
     "z-index: 10000;" +
     "width: 369px;" +
